@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace TTMaster
@@ -24,7 +25,7 @@ namespace TTMaster
     {
         private ListSortDirection _lastDirection;
         private GridViewColumnHeader _lastHeaderClicked;
-        private ActorViewModel viewModel;
+        private TTDataContext viewModel;
 
         public MainWindow()
         {
@@ -35,6 +36,14 @@ namespace TTMaster
         {
             base.OnInitialized(e);
 
+            viewModel = new TTDataContext() { };
+
+            this.DataContext = viewModel;
+        }
+
+
+        private void ActorsItemContent_Loaded(object sender, RoutedEventArgs e)
+        {
             Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
 
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
@@ -52,12 +61,36 @@ namespace TTMaster
                 actors.Add(entity);
             }
 
-            viewModel = new ActorViewModel() { Actors = actors, };
-
-            this.TopologyListView.DataContext = viewModel; 
+            this.viewModel.Actors = actors;
         }
 
-        private void GridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
+        private void QueuesItemContent_Loaded(object sender, RoutedEventArgs e)
+        {
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+
+            CloudQueueClient client = storageAccount.CreateCloudQueueClient();
+
+            IList<QueueViewModel> queues = new List<QueueViewModel>();
+            foreach (CloudQueue queue in client.ListQueues())
+            {
+                queue.FetchAttributes();
+                queues.Add(new QueueViewModel() { Name = queue.Name, Length = queue.ApproximateMessageCount, });
+            }
+
+            this.viewModel.Queues = queues;
+        }
+
+        private void ActorsGridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
+        {
+            SortByClick(sender, e);
+        }
+
+        private void QueuesGridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
+        {
+            SortByClick(sender, e);
+        }
+
+        private void SortByClick(object sender, RoutedEventArgs e)
         {
             GridViewColumnHeader headerClicked = e.OriginalSource as GridViewColumnHeader;
             ListSortDirection direction;
@@ -83,7 +116,7 @@ namespace TTMaster
                     }
 
                     string header = headerClicked.Column.Header as string;
-                    Sort(header, direction);
+                    Sort(header, direction, sender as ListView);
 
                     if (direction == ListSortDirection.Ascending)
                     {
@@ -109,10 +142,9 @@ namespace TTMaster
             }
         }
 
-        private void Sort(string sortBy, ListSortDirection direction)
+        private void Sort(string sortBy, ListSortDirection direction, ListView listView)
         {
-            ICollectionView dataView =
-              CollectionViewSource.GetDefaultView(this.TopologyListView.ItemsSource);
+            ICollectionView dataView = CollectionViewSource.GetDefaultView(listView.ItemsSource);
 
             dataView.SortDescriptions.Clear();
             SortDescription sd = new SortDescription(sortBy, direction);

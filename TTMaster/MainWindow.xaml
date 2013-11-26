@@ -3,24 +3,43 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="800" Width="1200">
     <Grid>
-        <ListView Name="TopologyListView" Margin="12,12,12,12" ItemsSource="{Binding Actors}" GridViewColumnHeader.Click="GridViewColumnHeaderClickedHandler">
-            <ListView.Background>
-                <LinearGradientBrush>
-                    <GradientStop Color="Gray" Offset="0"/>
-                </LinearGradientBrush>
-            </ListView.Background>
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Topology" Width="100" DisplayMemberBinding="{Binding Path=Topology}"/>
-                    <GridViewColumn Header="IsSpout" Width="100" DisplayMemberBinding="{Binding Path=IsSpout}"/>
-                    <GridViewColumn Header="SchemaGroupingMode" Width="150" DisplayMemberBinding="{Binding Path=SchemaGroupingMode}"/>
-                    <GridViewColumn Header="GroupingField" Width="100" DisplayMemberBinding="{Binding Path=GroupingField}"/>
-                    <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding Path=Name}"/>
-                    <GridViewColumn Header="InQueue" Width="100" DisplayMemberBinding="{Binding Path=InQueue}"/>
-                    <GridViewColumn Header="OutQueues" Width="200" DisplayMemberBinding="{Binding Path=OutQueues}"/>
-                    <GridViewColumn Header="RowKey" Width="100" DisplayMemberBinding="{Binding Path=RowKey}"/>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <TabControl TabStripPlacement="Top" Margin="0, 0, 0, 10">
+            <TabItem Name="actorsItemContent" Header="Actors" Loaded="ActorsItemContent_Loaded">
+                <ListView Name="TopologyListView" Margin="12,12,12,12" ItemsSource="{Binding Actors}" GridViewColumnHeader.Click="ActorsGridViewColumnHeaderClickedHandler">
+                    <ListView.Background>
+                        <LinearGradientBrush>
+                            <GradientStop Color="Gray" Offset="0"/>
+                        </LinearGradientBrush>
+                    </ListView.Background>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Topology" Width="100" DisplayMemberBinding="{Binding Path=Topology}"/>
+                            <GridViewColumn Header="IsSpout" Width="100" DisplayMemberBinding="{Binding Path=IsSpout}"/>
+                            <GridViewColumn Header="SchemaGroupingMode" Width="150" DisplayMemberBinding="{Binding Path=SchemaGroupingMode}"/>
+                            <GridViewColumn Header="GroupingField" Width="100" DisplayMemberBinding="{Binding Path=GroupingField}"/>
+                            <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding Path=Name}"/>
+                            <GridViewColumn Header="InQueue" Width="100" DisplayMemberBinding="{Binding Path=InQueue}"/>
+                            <GridViewColumn Header="OutQueues" Width="200" DisplayMemberBinding="{Binding Path=OutQueues}"/>
+                            <GridViewColumn Header="RowKey" Width="100" DisplayMemberBinding="{Binding Path=RowKey}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </TabItem>
+            <TabItem Name="queuesItemContent" Header="Queues" Loaded="QueuesItemContent_Loaded">
+                <ListView Name="QueueListView" Margin="12,12,12,12" ItemsSource="{Binding Queues}" GridViewColumnHeader.Click="QueuesGridViewColumnHeaderClickedHandler">
+                    <ListView.Background>
+                        <LinearGradientBrush>
+                            <GradientStop Color="Gray" Offset="0"/>
+                        </LinearGradientBrush>
+                    </ListView.Background>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Name" Width="300" DisplayMemberBinding="{Binding Path=Name}"/>
+                            <GridViewColumn Header="Length" Width="100" DisplayMemberBinding="{Binding Path=Length}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
