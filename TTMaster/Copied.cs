@@ -37,6 +37,12 @@ namespace TTMaster
 
         public string GroupingField { get; set; }
 
-        public bool IsSpout { get; set; }
+        public bool? IsSpout { get; set; }
+
+        public string State { get; set; }
+
+        public string Operation { get; set; }
+
+        public DateTime HeartBeat { get; set; }
     }
 }

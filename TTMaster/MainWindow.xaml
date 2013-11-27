@@ -3,9 +3,24 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="800" Width="1200">
     <Grid>
-        <TabControl TabStripPlacement="Top" Margin="0, 0, 0, 10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="23"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0">
+            <ToolBarTray DockPanel.Dock="Top">
+                <ToolBar>
+                    <Button Content="Refresh" Click="RefreshButton_Click"  />
+                    <Button Content="Kill" Click="KillButton_Click"  />
+                    <Button Content="Clone" Click="CloneButton_Click"  />
+                </ToolBar>
+            </ToolBarTray>
+        </DockPanel>
+
+        <TabControl Grid.Row="1" TabStripPlacement="Top" Margin="0, 0, 0, 10">
             <TabItem Name="actorsItemContent" Header="Actors" Loaded="ActorsItemContent_Loaded">
-                <ListView Name="TopologyListView" Margin="12,12,12,12" ItemsSource="{Binding Actors}" GridViewColumnHeader.Click="ActorsGridViewColumnHeaderClickedHandler">
+                <ListView Name="TopologyListView" Margin="12,12,12,12" ItemsSource="{Binding Actors}" GridViewColumnHeader.Click="ActorsGridViewColumnHeaderClickedHandler" >
                     <ListView.Background>
                         <LinearGradientBrush>
                             <GradientStop Color="Gray" Offset="0"/>
@@ -14,13 +29,16 @@
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Topology" Width="100" DisplayMemberBinding="{Binding Path=Topology}"/>
+                            <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding Path=Name}"/>
+                            <GridViewColumn Header="State" Width="100" DisplayMemberBinding="{Binding Path=State}"/>
+                            <GridViewColumn Header="HeartBeat" Width="100" DisplayMemberBinding="{Binding Path=HeartBeat}"/>
                             <GridViewColumn Header="IsSpout" Width="100" DisplayMemberBinding="{Binding Path=IsSpout}"/>
                             <GridViewColumn Header="SchemaGroupingMode" Width="150" DisplayMemberBinding="{Binding Path=SchemaGroupingMode}"/>
                             <GridViewColumn Header="GroupingField" Width="100" DisplayMemberBinding="{Binding Path=GroupingField}"/>
-                            <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding Path=Name}"/>
                             <GridViewColumn Header="InQueue" Width="100" DisplayMemberBinding="{Binding Path=InQueue}"/>
                             <GridViewColumn Header="OutQueues" Width="200" DisplayMemberBinding="{Binding Path=OutQueues}"/>
                             <GridViewColumn Header="RowKey" Width="100" DisplayMemberBinding="{Binding Path=RowKey}"/>
+                            <GridViewColumn Header="Operation" Width="100" DisplayMemberBinding="{Binding Path=Operation}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>

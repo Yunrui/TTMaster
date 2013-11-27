@@ -41,8 +41,96 @@ namespace TTMaster
             this.DataContext = viewModel;
         }
 
+        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.actorsItemContent.IsSelected)
+            {
+                LoadActors();
+            }
+            else
+            {
+                LoadQueues();
+            }
+        }
+
+        private void CloneButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.actorsItemContent.IsSelected)
+            {
+                if (this.TopologyListView.SelectedItems.Count != 2)
+                {
+                    MessageBox.Show("Two items must be selected to clone.");
+                    return;
+                }
+
+                ActorAssignment source = null;
+                ActorAssignment dest = null;
+
+                ActorAssignment first = this.TopologyListView.SelectedItems[0] as ActorAssignment;
+                ActorAssignment second = this.TopologyListView.SelectedItems[1] as ActorAssignment;
+
+                if (first.State != "NewBorn" && second.State != "NewBorn")
+                {
+                    MessageBox.Show("One of the selection must be a NewBorn.");
+                    return;
+                }
+                else if (first.State == "NewBorn" && second.State == "NewBorn")
+                {
+                    MessageBox.Show("Only one NewBorn is allowed.");
+                    return;
+                }
+                else
+                {
+                    source = first.State == "NewBorn" ? second : first;
+                    dest = first.State == "NewBorn" ? first : second;
+
+                    Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+                    CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+                    CloudTable table = tableClient.GetTableReference("topology");
+
+                    dest.InQueue = source.InQueue;
+                    dest.IsSpout = source.IsSpout;
+                    dest.Name = source.Name;
+                    dest.OutQueues = source.OutQueues;
+                    dest.SchemaGroupingMode = source.SchemaGroupingMode;
+                    dest.Topology = source.Topology;
+                    dest.GroupingField = source.GroupingField;
+                    dest.ETag = "*";
+
+                    TableOperation mergeOperation = TableOperation.Merge(dest);
+                    TableResult retrievedResult = table.Execute(mergeOperation);
+                }
+            }
+        }
+
+        private void KillButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.actorsItemContent.IsSelected)
+            {
+                var index = this.TopologyListView.SelectedIndex;
+
+                if (this.TopologyListView.SelectedValue != null)
+                {
+                    Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+
+                    CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+
+                    CloudTable table = tableClient.GetTableReference("topology");
+
+                    var assignment = this.TopologyListView.SelectedValue as ActorAssignment;
+                    assignment.Operation = "Kill";
+                    TableOperation mergeOperation = TableOperation.Merge(assignment);
+                    TableResult retrievedResult = table.Execute(mergeOperation);
+                }
+            }
+        }
 
         private void ActorsItemContent_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadActors();
+        }
+
+        private void LoadActors()
         {
             Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
 
@@ -65,6 +153,11 @@ namespace TTMaster
         }
 
         private void QueuesItemContent_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadQueues();
+        }
+
+        private void LoadQueues()
         {
             Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
 
