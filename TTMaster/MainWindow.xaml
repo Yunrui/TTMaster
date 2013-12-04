@@ -9,11 +9,13 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0">
+            <CheckBox Name="envCheckBox" Padding="0,4,0,0">DevBox</CheckBox>
             <ToolBarTray DockPanel.Dock="Top">
                 <ToolBar>
                     <Button Content="Refresh" Click="RefreshButton_Click"  />
                     <Button Content="Kill" Click="KillButton_Click"  />
                     <Button Content="Clone" Click="CloneButton_Click"  />
+                    <Button Content="CFR Deploy" Click="CFRButton_Click"  />
                 </ToolBar>
             </ToolBarTray>
         </DockPanel>

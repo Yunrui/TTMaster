@@ -27,6 +27,64 @@ namespace TTMaster
         private GridViewColumnHeader _lastHeaderClicked;
         private TTDataContext viewModel;
 
+        private static List<ActorAssignment> cfrAssignments = new List<ActorAssignment>()
+        {
+            new ActorAssignment(Guid.Empty)
+                    {
+                        Topology = "CFRTopology",
+                        Name = "TagIdSpout",
+                        IsSpout = true,
+                        InQueue = string.Empty,
+                        OutQueues = "cfroutput1,cfroutput2",
+                        SchemaGroupingMode = "FieldGrouping",
+                        GroupingField = "tagId,dateTime",
+                        HeartBeat = DateTime.UtcNow,
+                    },
+
+            new ActorAssignment(Guid.Empty)
+                    {
+                        Topology = "CFRTopology",
+                        Name = "TagIdGroupBolt",
+                        IsSpout = false,
+                        InQueue = "cfroutput1",
+                        OutQueues = "cfroutput3,cfroutput4",
+                        SchemaGroupingMode = "FieldGrouping",
+                        GroupingField = "page,dateTime",
+                        HeartBeat = DateTime.UtcNow,
+                    },
+
+            new ActorAssignment(Guid.Empty)
+                    {
+                        Topology = "CFRTopology",
+                        Name = "TagIdGroupBolt",
+                        IsSpout = false,
+                        InQueue = "cfroutput2",
+                        OutQueues = "cfroutput3,cfroutput4",
+                        SchemaGroupingMode = "FieldGrouping",
+                        GroupingField = "page,dateTime",
+                        HeartBeat = DateTime.UtcNow,
+                    },
+
+            new ActorAssignment(Guid.Empty)
+                    {
+                        Topology = "CFRTopology",
+                        Name = "PageGroupBolt",
+                        IsSpout = false,
+                        InQueue = "cfroutput3",
+                        HeartBeat = DateTime.UtcNow,
+                    },
+
+            new ActorAssignment(Guid.Empty)
+                    {
+                        Topology = "CFRTopology",
+                        Name = "PageGroupBolt",
+                        IsSpout = false,
+                        InQueue = "cfroutput4",
+                        HeartBeat = DateTime.UtcNow,
+                    },
+        };
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -50,6 +108,40 @@ namespace TTMaster
             else
             {
                 LoadQueues();
+            }
+        }
+
+        private void CFRButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.actorsItemContent.IsSelected)
+            {
+                if (this.TopologyListView.SelectedItems.Count != 5)
+                {
+                    MessageBox.Show("Five items must be selected to clone.");
+                    return;
+                }
+
+                foreach (ActorAssignment assignment in this.TopologyListView.SelectedItems)
+                {
+                    if (assignment.State != "NewBorn")
+                    {
+                        MessageBox.Show("All Items must be in NewBorn state.");
+                        return;
+                    }
+                }
+
+                Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = GetStorageAccount();
+                CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+                CloudTable table = tableClient.GetTableReference("topology");
+
+                for (int i = 0; i < 5; i++)
+                {
+                    cfrAssignments[i].RowKey = ((ActorAssignment)this.TopologyListView.SelectedItems[i]).RowKey;
+                    cfrAssignments[i].ETag = "*";
+
+                    TableOperation mergeOperation = TableOperation.Merge(cfrAssignments[i]);
+                    TableResult retrievedResult = table.Execute(mergeOperation);
+                }
             }
         }
 
@@ -84,7 +176,7 @@ namespace TTMaster
                     source = first.State == "NewBorn" ? second : first;
                     dest = first.State == "NewBorn" ? first : second;
 
-                    Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+                    Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = GetStorageAccount();
                     CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
                     CloudTable table = tableClient.GetTableReference("topology");
 
@@ -111,7 +203,7 @@ namespace TTMaster
 
                 if (this.TopologyListView.SelectedValue != null)
                 {
-                    Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+                    Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = GetStorageAccount();
 
                     CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
 
@@ -119,6 +211,7 @@ namespace TTMaster
 
                     var assignment = this.TopologyListView.SelectedValue as ActorAssignment;
                     assignment.Operation = "Kill";
+                    assignment.ETag = "*";
                     TableOperation mergeOperation = TableOperation.Merge(assignment);
                     TableResult retrievedResult = table.Execute(mergeOperation);
                 }
@@ -132,7 +225,7 @@ namespace TTMaster
 
         private void LoadActors()
         {
-            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = GetStorageAccount();
 
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
 
@@ -159,7 +252,7 @@ namespace TTMaster
 
         private void LoadQueues()
         {
-            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = GetStorageAccount();
 
             CloudQueueClient client = storageAccount.CreateCloudQueueClient();
 
@@ -173,6 +266,18 @@ namespace TTMaster
             this.viewModel.Queues = queues;
         }
 
+        private Microsoft.WindowsAzure.Storage.CloudStorageAccount GetStorageAccount()
+        {
+            if (this.envCheckBox.IsChecked.HasValue && this.envCheckBox.IsChecked.Value)
+            {
+                return Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+            }
+            else
+            {
+                return Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=taotie;AccountKey=cA2QpkcF0i5JJ2tXVlFrPOsw+cDxj/NsNq3x00tZ7HLCicUewgcXxY0Q1gY34A+sgNcXa8BJdr8ONZMnfwKfnA==");
+            }
+        }
+
         private void ActorsGridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
         {
             SortByClick(sender, e);
@@ -182,6 +287,8 @@ namespace TTMaster
         {
             SortByClick(sender, e);
         }
+
+
 
         private void SortByClick(object sender, RoutedEventArgs e)
         {
