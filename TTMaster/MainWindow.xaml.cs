@@ -218,6 +218,17 @@ namespace TTMaster
             }
         }
 
+        private void CFRQueueButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse("DefaultEndpointsProtocol=http;AccountName=lqueue;AccountKey=vtVWSPvFXzJ3WzHcKpFbU9GY5YNsDGs493FMaxXpZFhwLN/pyfICpAOQcfj+QSP8T/r4yeIEHLOgKurPPB9EPQ==");
+            CloudQueueClient client = storageAccount.CreateCloudQueueClient();
+            var queue = client.GetQueueReference("cfr");
+
+            queue.FetchAttributes();
+
+            MessageBox.Show(string.Format("CFR queue has around {0} items.", queue.ApproximateMessageCount));
+        }
+
         private void ActorsItemContent_Loaded(object sender, RoutedEventArgs e)
         {
             LoadActors();

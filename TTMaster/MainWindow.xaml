@@ -16,6 +16,7 @@
                     <Button Content="Clone" Click="CloneButton_Click"  />
                     <Button Content="CFR Deploy" Click="CFRButton_Click"  />
                     <Button Content="Kill" Click="KillButton_Click"  />
+                    <Button Content="CFR Queue" Click="CFRQueueButton_Click"  />
                 </ToolBar>
             </ToolBarTray>
         </DockPanel>
@@ -41,6 +42,8 @@
                             <GridViewColumn Header="OutQueues" Width="200" DisplayMemberBinding="{Binding Path=OutQueues}"/>
                             <GridViewColumn Header="RowKey" Width="100" DisplayMemberBinding="{Binding Path=RowKey}"/>
                             <GridViewColumn Header="Operation" Width="100" DisplayMemberBinding="{Binding Path=Operation}"/>
+                            <GridViewColumn Header="ErrorMessage" Width="300" DisplayMemberBinding="{Binding Path=ErrorMessage}"/>
+                            <GridViewColumn Header="ErrorStack" Width="700" DisplayMemberBinding="{Binding Path=ErrorStack}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>
