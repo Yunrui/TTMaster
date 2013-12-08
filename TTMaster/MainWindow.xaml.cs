@@ -15,6 +15,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
+using System.Net;
+using System.Diagnostics;
+using Microsoft.WindowsAzure.Storage;
 
 namespace TTMaster
 {
@@ -87,6 +90,10 @@ namespace TTMaster
 
         public MainWindow()
         {
+            ServicePointManager.UseNagleAlgorithm = false;
+            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
+            ServicePointManager.Expect100Continue = false;
+
             InitializeComponent();
         }
 
@@ -277,9 +284,9 @@ namespace TTMaster
             this.viewModel.Queues = queues;
         }
 
-        private Microsoft.WindowsAzure.Storage.CloudStorageAccount GetStorageAccount()
+        private Microsoft.WindowsAzure.Storage.CloudStorageAccount GetStorageAccount(bool devboxForce = false)
         {
-            if (this.envCheckBox.IsChecked.HasValue && this.envCheckBox.IsChecked.Value)
+            if (devboxForce || this.envCheckBox.IsChecked.HasValue && this.envCheckBox.IsChecked.Value)
             {
                 return Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
             }
@@ -361,6 +368,54 @@ namespace TTMaster
             SortDescription sd = new SortDescription(sortBy, direction);
             dataView.SortDescriptions.Add(sd);
             dataView.Refresh();
+        }
+
+        CloudQueue asyncQueue = null;
+        private void PerfButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = GetStorageAccount();
+            CloudQueueClient client = storageAccount.CreateCloudQueueClient();
+            CloudQueue queue = client.GetQueueReference("perf");
+            queue.DeleteIfExists();
+            queue.CreateIfNotExists();
+
+            CloudQueue queueAsync = client.GetQueueReference("async");
+            queueAsync.DeleteIfExists();
+            queueAsync.CreateIfNotExists();
+            this.asyncQueue = queueAsync;
+
+            int count = 0;
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerAsync();
+
+            do
+            {
+                var message = new CloudQueueMessage("Hello Queue");
+                var results = queueAsync.GetMessages(32);
+
+                count += results.Count();
+
+                if (count % 100 == 0)
+                {
+                    Debug.WriteLine(string.Format("It takes {0} seconds to load {1} objects", watch.ElapsedMilliseconds / 1000, count));
+                }
+            }
+            while (true);
+        }
+
+        void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            do
+            {
+                var message = new CloudQueueMessage("Hello Queue");
+                this.asyncQueue.AddMessageAsync(message);
+            }
+            while (true);
         }
     }
 }

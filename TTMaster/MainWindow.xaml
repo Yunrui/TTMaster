@@ -17,6 +17,7 @@
                     <Button Content="CFR Deploy" Click="CFRButton_Click"  />
                     <Button Content="Kill" Click="KillButton_Click"  />
                     <Button Content="CFR Queue" Click="CFRQueueButton_Click"  />
+                    <Button Content="PerfTest" Click="PerfButton_Click"  />
                 </ToolBar>
             </ToolBarTray>
         </DockPanel>
